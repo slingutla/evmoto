@@ -91,6 +91,51 @@ test("assistant returns answer from OpenAI response", async () => {
   }
 });
 
+test("assistant returns answer from output content", async () => {
+  const oldKey = process.env.OPENAI_API_KEY;
+  const oldFetch = globalThis.fetch;
+  let requestBody;
+  process.env.OPENAI_API_KEY = "test-key";
+  globalThis.fetch = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        output: [
+          {
+            type: "message",
+            content: [
+              { type: "output_text", text: "A compact EV fits this commute well." }
+            ]
+          }
+        ]
+      })
+    };
+  };
+
+  try {
+    const req = {
+      method: "POST",
+      body: { topic: "Motorcycles", message: "Which bike should I buy?" }
+    };
+    const res = createRes();
+    await assistantHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.payload.answer, "A compact EV fits this commute well.");
+    assert.match(requestBody.instructions, /motorcycles/i);
+    assert.match(requestBody.instructions, /rider experience/i);
+  } finally {
+    if (oldKey) {
+      process.env.OPENAI_API_KEY = oldKey;
+    } else {
+      delete process.env.OPENAI_API_KEY;
+    }
+    globalThis.fetch = oldFetch;
+  }
+});
+
 test("signup returns 400 for invalid email", async () => {
   const req = { method: "POST", body: { email: "not-an-email" } };
   const res = createRes();

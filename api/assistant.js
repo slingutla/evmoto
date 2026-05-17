@@ -2,8 +2,15 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-const DEFAULT_MODEL = "gpt-5";
+const DEFAULT_MODEL = "gpt-4.1-mini";
 const MAX_MESSAGE_LENGTH = 1200;
+const MAX_OUTPUT_TOKENS = 1200;
+const TOPIC_INSTRUCTIONS = {
+  "Electric Vehicles":
+    "Focus on electric vehicles, charging, range, incentives, battery health, ownership cost, commute fit, and model comparisons.",
+  Motorcycles:
+    "Focus on motorcycles, rider experience, ergonomics, categories, safety equipment, maintenance, insurance, and trip style."
+};
 
 function parseEnvValue(raw) {
   const value = raw.trim();
@@ -52,14 +59,38 @@ function extractText(responseBody) {
   }
 
   const chunks = [];
-  for (const output of responseBody.output || []) {
-    for (const content of output.content || []) {
-      if (typeof content.text === "string") {
-        chunks.push(content.text);
+
+  function collectText(value) {
+    if (!value) {
+      return;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        collectText(item);
+      }
+      return;
+    }
+    if (typeof value === "object") {
+      if (
+        (value.type === "output_text" || value.type === "text") &&
+        typeof value.text === "string"
+      ) {
+        chunks.push(value.text);
+        return;
+      }
+      if (typeof value.output_text === "string") {
+        chunks.push(value.output_text);
+      }
+      if (Array.isArray(value.output)) {
+        collectText(value.output);
+      }
+      if (Array.isArray(value.content)) {
+        collectText(value.content);
       }
     }
   }
 
+  collectText(responseBody.output);
   return chunks.join("\n").trim();
 }
 
@@ -76,6 +107,8 @@ export default async function handler(req, res) {
     if (message.length > MAX_MESSAGE_LENGTH) {
       return res.status(400).json({ message: "Message is too long." });
     }
+    const topic = String(req.body?.topic || "").trim();
+    const topicInstruction = TOPIC_INSTRUCTIONS[topic] || TOPIC_INSTRUCTIONS["Electric Vehicles"];
 
     const apiKey = getOpenAIKey();
     if (!apiKey) {
@@ -93,9 +126,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
         instructions:
-          "You are the EvMoto AI assistant. Help shoppers compare electric vehicles, motorcycles, budgets, range, charging, riding experience, comfort, and ownership tradeoffs. Keep answers concise, practical, and tailored to the user's stated needs.",
+          `You are the EvMoto AI assistant. ${topicInstruction} Keep answers concise, practical, and tailored to the user's stated needs.`,
         input: message,
-        max_output_tokens: 700,
+        text: { format: { type: "text" } },
+        max_output_tokens: MAX_OUTPUT_TOKENS,
         store: false
       })
     });
@@ -108,6 +142,16 @@ export default async function handler(req, res) {
     }
 
     const answer = extractText(data);
+    if (!answer && data.status === "incomplete") {
+      const reason = data.incomplete_details?.reason || "unknown";
+      return res.status(502).json({
+        message: `OpenAI response was incomplete (${reason}). Please try a shorter question.`
+      });
+    }
+    if (!answer && data.error?.message) {
+      return res.status(502).json({ message: data.error.message });
+    }
+
     return res.status(200).json({
       answer: answer || "I could not generate an answer. Please try again."
     });
