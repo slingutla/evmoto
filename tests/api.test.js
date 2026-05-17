@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import assistantHandler from "../api/assistant.js";
 import recommendHandler from "../api/recommend.js";
 import signupHandler from "../api/signup.js";
 
@@ -46,6 +47,48 @@ test("recommend returns recommendation for valid input", async () => {
   await recommendHandler(req, res);
   assert.equal(res.statusCode, 200);
   assert.match(res.payload.recommendation, /QuietWave Pro/);
+});
+
+test("assistant returns 405 for non-POST requests", async () => {
+  const req = { method: "GET" };
+  const res = createRes();
+  await assistantHandler(req, res);
+  assert.equal(res.statusCode, 405);
+  assert.equal(res.payload.message, "Method not allowed");
+});
+
+test("assistant returns 400 for empty messages", async () => {
+  const req = { method: "POST", body: { message: "   " } };
+  const res = createRes();
+  await assistantHandler(req, res);
+  assert.equal(res.statusCode, 400);
+});
+
+test("assistant returns answer from OpenAI response", async () => {
+  const oldKey = process.env.OPENAI_API_KEY;
+  const oldFetch = globalThis.fetch;
+  process.env.OPENAI_API_KEY = "test-key";
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ output_text: "A compact EV fits this commute well." })
+  });
+
+  try {
+    const req = { method: "POST", body: { message: "Which EV should I buy?" } };
+    const res = createRes();
+    await assistantHandler(req, res);
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.payload.answer, "A compact EV fits this commute well.");
+  } finally {
+    if (oldKey) {
+      process.env.OPENAI_API_KEY = oldKey;
+    } else {
+      delete process.env.OPENAI_API_KEY;
+    }
+    globalThis.fetch = oldFetch;
+  }
 });
 
 test("signup returns 400 for invalid email", async () => {
