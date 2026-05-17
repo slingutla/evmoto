@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PulsePick AI | Smart Recommendations in Seconds</title>
+  <title>EvMoto AI | Smart Recommendations in Seconds</title>
   <style>
     :root {
       --bg1: #0b1220;
@@ -76,6 +76,71 @@
       color: #bbf7d0;
       min-height: 24px;
     }
+    .feature-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .feature-list li {
+      color: var(--text);
+      line-height: 1.45;
+      padding-left: 18px;
+      position: relative;
+    }
+    .feature-list li::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      left: 0;
+      top: 0.65em;
+    }
+    .chat-log {
+      display: grid;
+      gap: 10px;
+      min-height: 160px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-top: 16px;
+      padding-right: 4px;
+    }
+    .message {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      background: rgba(34, 197, 94, 0.12);
+      color: #dcfce7;
+    }
+    .message.assistant {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font: inherit;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+    textarea::placeholder {
+      color: var(--muted);
+    }
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -107,6 +172,42 @@
       </form>
       <div class="result" id="reco-result"></div>
     </section>
+
+    <section class="card">
+      <span class="pill">Electric Vehicles</span>
+      <h2>Find the right EV for your daily drive.</h2>
+      <p>Compare electric cars by range, charging needs, budget, comfort, and commute style so shoppers can choose with confidence.</p>
+      <ul class="feature-list">
+        <li>Match EVs by range, charging access, and driving habits.</li>
+        <li>Surface total cost factors like incentives, maintenance, and energy use.</li>
+        <li>Recommend practical options for city, family, and long-distance drivers.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <span class="pill">Motorcycles</span>
+      <h2>Choose a motorcycle that fits the rider.</h2>
+      <p>Guide customers toward motorcycles based on experience level, riding position, trip type, performance needs, and ownership budget.</p>
+      <ul class="feature-list">
+        <li>Recommend bikes for commuting, touring, sport, cruiser, and adventure use.</li>
+        <li>Account for rider height, skill level, fuel range, and comfort.</li>
+        <li>Balance performance, safety features, insurance, and maintenance costs.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <span class="pill">AI Assistant</span>
+      <h2>Ask EvMoto AI</h2>
+      <p>Get practical answers about EVs, motorcycles, budgets, charging, range, comfort, and ownership tradeoffs.</p>
+      <div class="chat-log" id="chat-log" aria-live="polite">
+        <div class="message assistant">Tell me what you drive, ride, or shop for, and I will help narrow the options.</div>
+      </div>
+      <form id="assistant-form">
+        <textarea id="assistant-message" name="message" maxlength="1200" placeholder="Example: I commute 45 miles daily, can charge at home, and want an EV under $40k." required></textarea>
+        <button type="submit">Ask Assistant</button>
+      </form>
+      <div class="result" id="assistant-result"></div>
+    </section>
   </div>
 
   <script>
@@ -114,6 +215,19 @@
     const signupResult = document.getElementById("signup-result");
     const recoForm = document.getElementById("reco-form");
     const recoResult = document.getElementById("reco-result");
+    const assistantForm = document.getElementById("assistant-form");
+    const assistantResult = document.getElementById("assistant-result");
+    const assistantMessage = document.getElementById("assistant-message");
+    const chatLog = document.getElementById("chat-log");
+
+    function addChatMessage(text, role) {
+      const message = document.createElement("div");
+      message.className = `message ${role}`;
+      message.textContent = text;
+      chatLog.appendChild(message);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return message;
+    }
 
     signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -158,6 +272,36 @@
         recoResult.textContent = "Network error. Please try again.";
       } finally {
         button.disabled = false;
+      }
+    });
+
+    assistantForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = assistantMessage.value.trim();
+      if (!message) return;
+
+      addChatMessage(message, "user");
+      assistantMessage.value = "";
+      assistantResult.textContent = "Thinking...";
+      const pendingMessage = addChatMessage("Thinking...", "assistant");
+
+      const button = assistantForm.querySelector("button");
+      button.disabled = true;
+      try {
+        const res = await fetch("/api/assistant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        pendingMessage.textContent = data.answer || data.message || "No answer.";
+        assistantResult.textContent = res.ok ? "" : data.message || "Assistant error.";
+      } catch {
+        pendingMessage.textContent = "Network error. Please try again.";
+        assistantResult.textContent = "Network error. Please try again.";
+      } finally {
+        button.disabled = false;
+        assistantMessage.focus();
       }
     });
   </script>
