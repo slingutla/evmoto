@@ -119,15 +119,22 @@
       e.preventDefault();
       signupResult.textContent = "Submitting...";
       const email = document.getElementById("email").value;
-
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      signupResult.textContent = data.message || "Saved.";
-      signupForm.reset();
+      const button = signupForm.querySelector("button");
+      button.disabled = true;
+      try {
+        const res = await fetch("/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        signupResult.textContent = data.message || "Saved.";
+        if (res.ok) signupForm.reset();
+      } catch {
+        signupResult.textContent = "Network error. Please try again.";
+      } finally {
+        button.disabled = false;
+      }
     });
 
     recoForm.addEventListener("submit", async (e) => {
@@ -137,13 +144,21 @@
       const budget = Number(document.getElementById("budget").value);
       const preference = document.getElementById("preference").value;
 
-      const res = await fetch("/api/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, budget, preference })
-      });
-      const data = await res.json();
-      recoResult.textContent = data.recommendation || data.message || "No result.";
+      const button = recoForm.querySelector("button");
+      button.disabled = true;
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ category, budget, preference })
+        });
+        const data = await res.json();
+        recoResult.textContent = data.recommendation || data.message || "No result.";
+      } catch {
+        recoResult.textContent = "Network error. Please try again.";
+      } finally {
+        button.disabled = false;
+      }
     });
   </script>
 </body>

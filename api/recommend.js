@@ -17,33 +17,39 @@ const RECOMMENDATIONS = {
 };
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ message: "Method not allowed" });
+    }
+
+    const { category, budget, preference } = req.body || {};
+    const parsedBudget = Number(budget);
+    const parsedPreference = String(preference || "").trim();
+    if (!category || !parsedPreference || !Number.isFinite(parsedBudget) || parsedBudget <= 0) {
+      return res.status(400).json({ message: "Missing or invalid input" });
+    }
+
+    const options = RECOMMENDATIONS[category] || [];
+    if (!options.length) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    const pref = parsedPreference.toLowerCase();
+    const scored = options
+      .map((item) => {
+        let score = 0;
+        if (item.price <= parsedBudget) score += 2;
+        if (item.tags.some((t) => pref.includes(t) || t.includes(pref))) score += 2;
+        score -= Math.abs(item.price - parsedBudget) / 100;
+        return { ...item, score };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    const best = scored[0];
+    return res.status(200).json({
+      recommendation: `${best.name} ($${best.price}) - tuned for "${parsedPreference}" with budget $${parsedBudget}.`
+    });
+  } catch {
+    return res.status(500).json({ message: "Internal server error" });
   }
-
-  const { category, budget, preference } = req.body || {};
-  if (!category || !budget || !preference) {
-    return res.status(400).json({ message: "Missing input" });
-  }
-
-  const options = RECOMMENDATIONS[category] || [];
-  if (!options.length) {
-    return res.status(404).json({ message: "Category not found" });
-  }
-
-  const pref = String(preference).toLowerCase();
-  const scored = options
-    .map((item) => {
-      let score = 0;
-      if (item.price <= budget) score += 2;
-      if (item.tags.some((t) => pref.includes(t) || t.includes(pref))) score += 2;
-      score -= Math.abs(item.price - budget) / 100;
-      return { ...item, score };
-    })
-    .sort((a, b) => b.score - a.score);
-
-  const best = scored[0];
-  return res.status(200).json({
-    recommendation: `${best.name} ($${best.price}) - tuned for "${preference}" with budget $${budget}.`
-  });
 }
