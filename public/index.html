@@ -3,306 +3,527 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EvMoto AI | Smart Recommendations in Seconds</title>
+  <title>EvMoto AI | EV and Motorcycle Intelligence</title>
   <style>
     :root {
-      --bg1: #0b1220;
-      --bg2: #172a45;
-      --accent: #22c55e;
-      --accent2: #f59e0b;
-      --text: #e5e7eb;
-      --muted: #94a3b8;
-      --card: rgba(255, 255, 255, 0.06);
-      --border: rgba(255, 255, 255, 0.18);
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef3f8;
+      --text: #142033;
+      --muted: #5c6b7d;
+      --line: #d7e0ea;
+      --ev: #0f8b62;
+      --moto: #b45309;
+      --accent: var(--ev);
+      --shadow: 0 16px 40px rgba(20, 32, 51, 0.12);
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       color: var(--text);
-      background:
-        radial-gradient(circle at 10% 20%, #1d4ed8 0%, transparent 30%),
-        radial-gradient(circle at 85% 10%, #15803d 0%, transparent 30%),
-        linear-gradient(160deg, var(--bg1), var(--bg2));
+      background: var(--bg);
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
     }
-    .container {
-      width: min(980px, 100%);
-      display: grid;
-      gap: 24px;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+    button, textarea {
+      font: inherit;
     }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px;
-      backdrop-filter: blur(8px);
-    }
-    h1 { margin: 0 0 12px; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.1; }
-    p { color: var(--muted); line-height: 1.5; }
-    .pill {
-      display: inline-block;
-      background: rgba(34, 197, 94, 0.16);
-      color: #bbf7d0;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      margin-bottom: 12px;
-    }
-    form { display: grid; gap: 10px; margin-top: 16px; }
-    input, select, button {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 1rem;
-      background: rgba(255,255,255,0.08);
-      color: var(--text);
-    }
+
     button {
       cursor: pointer;
-      border: none;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      color: #081220;
+    }
+
+    .app-shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 4px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.65rem;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(130px, 1fr));
+      gap: 6px;
+      padding: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .tab-button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      background: transparent;
+      color: var(--muted);
       font-weight: 700;
     }
-    .result {
-      margin-top: 12px;
-      font-weight: 600;
-      color: #bbf7d0;
-      min-height: 24px;
-    }
-    .feature-list {
-      display: grid;
-      gap: 10px;
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-    .feature-list li {
+
+    .tab-button[aria-selected="true"] {
+      background: var(--surface);
       color: var(--text);
+      box-shadow: 0 2px 10px rgba(20, 32, 51, 0.1);
+    }
+
+    .hero {
+      min-height: 260px;
+      display: grid;
+      align-items: end;
+      padding: 34px;
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(8, 18, 32, 0.78), rgba(8, 18, 32, 0.28)),
+        var(--hero-image);
+      background-size: cover;
+      background-position: center;
+      color: #ffffff;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+
+    .hero-content {
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.18);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .hero h2 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1;
+      max-width: 760px;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 620px;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 1.05rem;
+      line-height: 1.55;
+    }
+
+    .tab-panel[hidden] {
+      display: none;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 10px 24px rgba(20, 32, 51, 0.06);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .section h3 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .section-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
       line-height: 1.45;
-      padding-left: 18px;
-      position: relative;
     }
-    .feature-list li::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      position: absolute;
-      left: 0;
-      top: 0.65em;
+
+    .article-list {
+      display: grid;
+      gap: 12px;
     }
+
+    .article {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .article-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .article h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.35;
+    }
+
+    .article h4 a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .article h4 a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .article p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tag {
+      width: fit-content;
+      padding: 5px 8px;
+      border-radius: 8px;
+      background: color-mix(in srgb, var(--accent) 13%, white);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
     .chat-log {
       display: grid;
       gap: 10px;
-      min-height: 160px;
-      max-height: 320px;
+      min-height: 260px;
+      max-height: 380px;
       overflow-y: auto;
-      margin-top: 16px;
-      padding-right: 4px;
-    }
-    .message {
-      border: 1px solid var(--border);
-      border-radius: 12px;
       padding: 12px;
-      line-height: 1.45;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .message {
+      width: min(92%, 620px);
+      padding: 12px 14px;
+      border-radius: 8px;
+      line-height: 1.5;
       white-space: pre-wrap;
     }
-    .message.user {
-      background: rgba(34, 197, 94, 0.12);
-      color: #dcfce7;
-    }
+
     .message.assistant {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
+      justify-self: start;
+      background: #ffffff;
+      border: 1px solid var(--line);
     }
+
+    .message.user {
+      justify-self: end;
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .chat-form {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
     textarea {
       width: 100%;
-      min-height: 92px;
+      min-height: 104px;
       resize: vertical;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
       padding: 12px;
-      font: inherit;
-      background: rgba(255,255,255,0.08);
       color: var(--text);
+      background: #ffffff;
     }
-    textarea::placeholder {
-      color: var(--muted);
+
+    textarea:focus {
+      outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent);
+      border-color: var(--accent);
     }
-    button:disabled {
+
+    .primary-button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .primary-button:disabled {
       cursor: wait;
-      opacity: 0.7;
+      opacity: 0.68;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @media (max-width: 820px) {
+      .app-shell {
+        padding: 16px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .hero {
+        min-height: 230px;
+        padding: 24px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <section class="card">
-      <span class="pill">Private Beta</span>
-      <h1>Turn intent into the right product, instantly.</h1>
-      <p>PulsePick AI recommends the best product for each customer based on goals, budget, and taste. Join the waitlist to access the beta.</p>
-      <form id="signup-form">
-        <input type="email" id="email" name="email" placeholder="you@company.com" required />
-        <button type="submit">Join Waitlist</button>
-      </form>
-      <div class="result" id="signup-result"></div>
-    </section>
-
-    <section class="card">
-      <h2>AI Recommendation Prototype</h2>
-      <p>Try a simple recommender using budget + preference.</p>
-      <form id="reco-form">
-        <select id="category" name="category" required>
-          <option value="">Choose category</option>
-          <option value="headphones">Headphones</option>
-          <option value="laptop">Laptop</option>
-          <option value="running-shoes">Running Shoes</option>
-        </select>
-        <input type="number" id="budget" name="budget" placeholder="Budget in USD" required min="50" />
-        <input type="text" id="preference" name="preference" placeholder="Preference (e.g. noise canceling)" required />
-        <button type="submit">Get Recommendation</button>
-      </form>
-      <div class="result" id="reco-result"></div>
-    </section>
-
-    <section class="card">
-      <span class="pill">Electric Vehicles</span>
-      <h2>Find the right EV for your daily drive.</h2>
-      <p>Compare electric cars by range, charging needs, budget, comfort, and commute style so shoppers can choose with confidence.</p>
-      <ul class="feature-list">
-        <li>Match EVs by range, charging access, and driving habits.</li>
-        <li>Surface total cost factors like incentives, maintenance, and energy use.</li>
-        <li>Recommend practical options for city, family, and long-distance drivers.</li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <span class="pill">Motorcycles</span>
-      <h2>Choose a motorcycle that fits the rider.</h2>
-      <p>Guide customers toward motorcycles based on experience level, riding position, trip type, performance needs, and ownership budget.</p>
-      <ul class="feature-list">
-        <li>Recommend bikes for commuting, touring, sport, cruiser, and adventure use.</li>
-        <li>Account for rider height, skill level, fuel range, and comfort.</li>
-        <li>Balance performance, safety features, insurance, and maintenance costs.</li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <span class="pill">AI Assistant</span>
-      <h2>Ask EvMoto AI</h2>
-      <p>Get practical answers about EVs, motorcycles, budgets, charging, range, comfort, and ownership tradeoffs.</p>
-      <div class="chat-log" id="chat-log" aria-live="polite">
-        <div class="message assistant">Tell me what you drive, ride, or shop for, and I will help narrow the options.</div>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>EvMoto AI</h1>
+        <p>Current market reads and AI guidance for electric vehicles and motorcycles.</p>
       </div>
-      <form id="assistant-form">
-        <textarea id="assistant-message" name="message" maxlength="1200" placeholder="Example: I commute 45 miles daily, can charge at home, and want an EV under $40k." required></textarea>
-        <button type="submit">Ask Assistant</button>
-      </form>
-      <div class="result" id="assistant-result"></div>
+      <div class="tabs" role="tablist" aria-label="Vehicle type">
+        <button class="tab-button" id="ev-tab" type="button" role="tab" aria-selected="true" aria-controls="ev-panel" data-tab="ev">Electric Vehicles</button>
+        <button class="tab-button" id="moto-tab" type="button" role="tab" aria-selected="false" aria-controls="moto-panel" data-tab="moto">Motorcycles</button>
+      </div>
+    </header>
+
+    <section class="tab-panel" id="ev-panel" role="tabpanel" aria-labelledby="ev-tab" data-panel="ev" style="--accent: var(--ev); --hero-image: url('https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=1800&q=80');">
+      <div class="hero">
+        <div class="hero-content">
+          <span class="eyebrow">Electric Vehicles</span>
+          <h2>Choose an EV with range, charging, and ownership costs in view.</h2>
+          <p>Track practical EV buying signals and ask the assistant for model comparisons, charging fit, commute math, and budget tradeoffs.</p>
+        </div>
+      </div>
+      <div class="content-grid">
+        <section class="section" aria-labelledby="ev-articles-title">
+          <div class="section-header">
+            <div>
+              <h3 id="ev-articles-title">Latest EV Articles</h3>
+              <p>Recent themes buyers are watching across charging, incentives, range, and ownership cost.</p>
+            </div>
+          </div>
+          <div class="article-list">
+            <article class="article">
+              <span class="tag">Tax Credits</span>
+              <h4><a href="https://www.kiplinger.com/taxes/605201/federal-tax-credit-for-electric-vehicle-chargers" target="_blank" rel="noopener noreferrer">EV charger tax credit: what buyers need to know for 2026</a></h4>
+              <p>Kiplinger covers the home charging incentive timeline and why charger installation timing still matters for some households.</p>
+              <div class="article-meta"><span>Kiplinger</span><span>May 15, 2026</span></div>
+            </article>
+            <article class="article">
+              <span class="tag">Sales</span>
+              <h4><a href="https://finance.yahoo.com/sectors/energy/articles/ev-registrations-plunge-25-rebound-022000955.html" target="_blank" rel="noopener noreferrer">EV registrations slide before a rebound lifts several brands</a></h4>
+              <p>Yahoo Finance reports March registration pressure after incentive changes, with signs of recovery for select automakers.</p>
+              <div class="article-meta"><span>Yahoo Finance</span><span>May 16, 2026</span></div>
+            </article>
+            <article class="article">
+              <span class="tag">Models</span>
+              <h4><a href="https://electrek.co/2026/05/01/hyundai-ioniq-5-back-sales-up-11-in-2026/" target="_blank" rel="noopener noreferrer">Hyundai IONIQ 5 sales rebound in 2026</a></h4>
+              <p>Electrek highlights renewed IONIQ 5 momentum and why pricing, range, and fast charging keep it relevant for mainstream EV shoppers.</p>
+              <div class="article-meta"><span>Electrek</span><span>May 1, 2026</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="ev-chat-title">
+          <div class="section-header">
+            <div>
+              <h3 id="ev-chat-title">OpenAI Chat for EVs</h3>
+              <p>Ask about EV range, charging access, incentives, commute fit, and total cost.</p>
+            </div>
+          </div>
+          <div class="chat-log" id="ev-chat-log" aria-live="polite">
+            <div class="message assistant">Tell me your budget, commute, charging access, and must-have features. I will narrow the EV options.</div>
+          </div>
+          <form class="chat-form" data-chat-form="ev">
+            <textarea name="message" maxlength="1200" placeholder="Example: I drive 60 miles daily, can charge at home, and want an EV under $45k." required></textarea>
+            <button class="primary-button" type="submit">Ask EV Assistant</button>
+            <div class="status" data-status="ev"></div>
+          </form>
+        </section>
+      </div>
     </section>
-  </div>
+
+    <section class="tab-panel" id="moto-panel" role="tabpanel" aria-labelledby="moto-tab" data-panel="moto" hidden style="--accent: var(--moto); --hero-image: url('https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1800&q=80');">
+      <div class="hero">
+        <div class="hero-content">
+          <span class="eyebrow">Motorcycles</span>
+          <h2>Match the bike to the rider, road, and ownership reality.</h2>
+          <p>Compare motorcycles by rider experience, ergonomics, trip type, safety equipment, maintenance, insurance, and long-term comfort.</p>
+        </div>
+      </div>
+      <div class="content-grid">
+        <section class="section" aria-labelledby="moto-articles-title">
+          <div class="section-header">
+            <div>
+              <h3 id="moto-articles-title">Latest Motorcycle Articles</h3>
+              <p>Current buying themes across beginner bikes, touring comfort, safety tech, and ownership costs.</p>
+            </div>
+          </div>
+          <div class="article-list">
+            <article class="article">
+              <span class="tag">Industry</span>
+              <h4><a href="https://www.investing.com/news/stock-market-news/harleydavidson-bets-on-affordable-models-dealer-network-in-latest-turnaround-effort-4658426" target="_blank" rel="noopener noreferrer">Harley-Davidson leans into affordable models and dealers</a></h4>
+              <p>Reuters reports Harley's latest turnaround plan, including lower-priced motorcycles and a renewed focus on its dealer network.</p>
+              <div class="article-meta"><span>Reuters via Investing.com</span><span>May 5, 2026</span></div>
+            </article>
+            <article class="article">
+              <span class="tag">New Models</span>
+              <h4><a href="https://www.motortrend.com/news/norton-manx-manx-r-us-return-2026/" target="_blank" rel="noopener noreferrer">Norton returns to the U.S. with 2026 Manx superbikes</a></h4>
+              <p>MotorTrend covers Norton's U.S. return and the tech, lighting, access, and brand strategy around the new Manx lineup.</p>
+              <div class="article-meta"><span>MotorTrend</span><span>April 2026</span></div>
+            </article>
+            <article class="article">
+              <span class="tag">2026 Lineup</span>
+              <h4><a href="https://www.motorcycles.news/en/motorcycles-2026/" target="_blank" rel="noopener noreferrer">2026 motorcycle models and highlights overview</a></h4>
+              <p>Motorcycles News maintains a broad 2026 overview covering model updates, launches, and emerging electric motorcycle entries.</p>
+              <div class="article-meta"><span>Motorcycles News</span><span>Updated 2026</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="moto-chat-title">
+          <div class="section-header">
+            <div>
+              <h3 id="moto-chat-title">OpenAI Chat for Motorcycles</h3>
+              <p>Ask about rider fit, bike categories, maintenance, safety features, and trip style.</p>
+            </div>
+          </div>
+          <div class="chat-log" id="moto-chat-log" aria-live="polite">
+            <div class="message assistant">Tell me your riding experience, height, budget, and trip type. I will suggest practical motorcycle options.</div>
+          </div>
+          <form class="chat-form" data-chat-form="moto">
+            <textarea name="message" maxlength="1200" placeholder="Example: I am a newer rider, 5'8, want weekend rides and commuting under $8k." required></textarea>
+            <button class="primary-button" type="submit">Ask Motorcycle Assistant</button>
+            <div class="status" data-status="moto"></div>
+          </form>
+        </section>
+      </div>
+    </section>
+  </main>
 
   <script>
-    const signupForm = document.getElementById("signup-form");
-    const signupResult = document.getElementById("signup-result");
-    const recoForm = document.getElementById("reco-form");
-    const recoResult = document.getElementById("reco-result");
-    const assistantForm = document.getElementById("assistant-form");
-    const assistantResult = document.getElementById("assistant-result");
-    const assistantMessage = document.getElementById("assistant-message");
-    const chatLog = document.getElementById("chat-log");
+    const tabButtons = document.querySelectorAll("[role='tab']");
+    const panels = document.querySelectorAll("[role='tabpanel']");
+    const chatContext = {
+      ev: "Electric Vehicles",
+      moto: "Motorcycles"
+    };
 
-    function addChatMessage(text, role) {
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const activeTab = button.dataset.tab;
+        tabButtons.forEach((tab) => {
+          tab.setAttribute("aria-selected", String(tab.dataset.tab === activeTab));
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== activeTab;
+        });
+      });
+    });
+
+    function addChatMessage(log, text, role) {
       const message = document.createElement("div");
       message.className = `message ${role}`;
       message.textContent = text;
-      chatLog.appendChild(message);
-      chatLog.scrollTop = chatLog.scrollHeight;
+      log.appendChild(message);
+      log.scrollTop = log.scrollHeight;
       return message;
     }
 
-    signupForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      signupResult.textContent = "Submitting...";
-      const email = document.getElementById("email").value;
-      const button = signupForm.querySelector("button");
-      button.disabled = true;
-      try {
-        const res = await fetch("/api/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        signupResult.textContent = data.message || "Saved.";
-        if (res.ok) signupForm.reset();
-      } catch {
-        signupResult.textContent = "Network error. Please try again.";
-      } finally {
-        button.disabled = false;
-      }
-    });
+    document.querySelectorAll("[data-chat-form]").forEach((form) => {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const type = form.dataset.chatForm;
+        const textarea = form.querySelector("textarea");
+        const status = document.querySelector(`[data-status="${type}"]`);
+        const log = document.getElementById(`${type}-chat-log`);
+        const message = textarea.value.trim();
+        if (!message) return;
 
-    recoForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      recoResult.textContent = "Thinking...";
-      const category = document.getElementById("category").value;
-      const budget = Number(document.getElementById("budget").value);
-      const preference = document.getElementById("preference").value;
+        addChatMessage(log, message, "user");
+        textarea.value = "";
+        status.textContent = "Thinking...";
+        const pendingMessage = addChatMessage(log, "Thinking...", "assistant");
+        const button = form.querySelector("button");
+        button.disabled = true;
 
-      const button = recoForm.querySelector("button");
-      button.disabled = true;
-      try {
-        const res = await fetch("/api/recommend", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ category, budget, preference })
-        });
-        const data = await res.json();
-        recoResult.textContent = data.recommendation || data.message || "No result.";
-      } catch {
-        recoResult.textContent = "Network error. Please try again.";
-      } finally {
-        button.disabled = false;
-      }
-    });
-
-    assistantForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const message = assistantMessage.value.trim();
-      if (!message) return;
-
-      addChatMessage(message, "user");
-      assistantMessage.value = "";
-      assistantResult.textContent = "Thinking...";
-      const pendingMessage = addChatMessage("Thinking...", "assistant");
-
-      const button = assistantForm.querySelector("button");
-      button.disabled = true;
-      try {
-        const res = await fetch("/api/assistant", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
-        });
-        const data = await res.json();
-        pendingMessage.textContent = data.answer || data.message || "No answer.";
-        assistantResult.textContent = res.ok ? "" : data.message || "Assistant error.";
-      } catch {
-        pendingMessage.textContent = "Network error. Please try again.";
-        assistantResult.textContent = "Network error. Please try again.";
-      } finally {
-        button.disabled = false;
-        assistantMessage.focus();
-      }
+        try {
+          const res = await fetch("/api/assistant", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              topic: chatContext[type],
+              message
+            })
+          });
+          const data = await res.json();
+          pendingMessage.textContent = data.answer || data.message || "No answer.";
+          status.textContent = res.ok ? "" : data.message || "Assistant error.";
+        } catch {
+          pendingMessage.textContent = "Network error. Please try again.";
+          status.textContent = "Network error. Please try again.";
+        } finally {
+          button.disabled = false;
+          textarea.focus();
+        }
+      });
     });
   </script>
 </body>
