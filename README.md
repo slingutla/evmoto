@@ -1,5 +1,23 @@
 # AI Landing Starter
 
+## Page views and hourly article refresh
+
+The footer shows the shared home-page view count. Each page load records one view;
+hourly counter reads and tab switches do not increment it. Counts begin at setup
+and represent page loads, not unique visitors.
+
+Run `supabase/page-views.sql` in the Supabase SQL editor, then set `SUPABASE_URL`
+and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` for `vercel dev` and in Vercel's
+production environment. Redeploy after changing production environment variables.
+The service role key stays server-side. Without storage configuration, the footer
+shows "Page views: unavailable".
+
+Both article lists load from Google News RSS through `/api/articles?topic=ev`
+and `/api/articles?topic=moto`. Successful feeds are cached on Vercel for one hour.
+The browser refreshes both lists and the view count hourly, and catches up when
+returning to a suspended tab. Chat messages, drafts, and the selected tab remain
+intact. Feed failures retain existing articles and show a refresh status.
+
 ## What this includes
 - Simple landing page (`public/index.html`)
 - Signup API (`api/signup.js`)

@@ -23,11 +23,7 @@ function parseEnvValue(raw) {
   return value;
 }
 
-function getOpenAIKey() {
-  if (process.env.OPENAI_API_KEY) {
-    return process.env.OPENAI_API_KEY;
-  }
-
+function getEnvValueFromFiles(name) {
   const envPaths = [
     join(process.cwd(), ".env.local"),
     join(process.cwd(), ".env"),
@@ -43,7 +39,7 @@ function getOpenAIKey() {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
 
-      const match = trimmed.match(/^OPENAI_API_KEY\s*=\s*(.+)$/);
+      const match = trimmed.match(new RegExp(`^${name}\\s*=\\s*(.+)$`));
       if (match) {
         return parseEnvValue(match[1]);
       }
@@ -51,6 +47,20 @@ function getOpenAIKey() {
   }
 
   return "";
+}
+
+function getOpenAIKey() {
+  if (process.env.OPENAI_API_KEY) {
+    return process.env.OPENAI_API_KEY;
+  }
+  return getEnvValueFromFiles("OPENAI_API_KEY");
+}
+
+function getOpenAIModel() {
+  if (process.env.OPENAI_MODEL) {
+    return process.env.OPENAI_MODEL;
+  }
+  return getEnvValueFromFiles("OPENAI_MODEL") || DEFAULT_MODEL;
 }
 
 function extractText(responseBody) {
@@ -111,6 +121,7 @@ export default async function handler(req, res) {
     const topicInstruction = TOPIC_INSTRUCTIONS[topic] || TOPIC_INSTRUCTIONS["Electric Vehicles"];
 
     const apiKey = getOpenAIKey();
+    const model = getOpenAIModel();
     if (!apiKey) {
       return res.status(500).json({
         message: "OPENAI_API_KEY is missing. Add it to .env.local or your deployment environment."
@@ -124,7 +135,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
+        model,
         instructions:
           `You are the EvMoto AI assistant. ${topicInstruction} Keep answers concise, practical, and tailored to the user's stated needs.`,
         input: message,

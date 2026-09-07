@@ -306,6 +306,24 @@
       font-weight: 700;
     }
 
+    .site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .refresh-status {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
     @media (max-width: 820px) {
       .app-shell {
         padding: 16px;
@@ -456,9 +474,109 @@
         </section>
       </div>
     </section>
+    <footer class="site-footer">
+      <span id="page-views" role="status">Page views: loading...</span>
+      <span>View count and articles refresh every hour.</span>
+    </footer>
   </main>
 
   <script>
+    const REFRESH_INTERVAL = 60 * 60 * 1000;
+    const viewLabel = document.getElementById("page-views");
+    let refreshing = false;
+    let lastRefresh = 0;
+    let displayedCount = null;
+    const articleStatuses = {};
+
+    for (const topic of ["ev", "moto"]) {
+      const list = document.querySelector(`#${topic}-panel .article-list`);
+      const status = document.createElement("p");
+      status.className = "refresh-status";
+      status.setAttribute("role", "status");
+      status.textContent = "Loading latest articles...";
+      list.before(status);
+      articleStatuses[topic] = status;
+    }
+
+    async function refreshViews(recordVisit = false) {
+      try {
+        const response = await fetch("/api/views", {
+          method: recordVisit ? "POST" : "GET",
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) throw new Error("Count unavailable");
+        const { count } = await response.json();
+        if (!Number.isSafeInteger(count) || count < 0) throw new Error("Invalid count");
+        displayedCount = count;
+        viewLabel.textContent = `Page views: ${count.toLocaleString()}`;
+      } catch {
+        viewLabel.textContent = displayedCount === null
+          ? "Page views: unavailable"
+          : `Page views: ${displayedCount.toLocaleString()} (refresh unavailable)`;
+      }
+    }
+
+    async function refreshArticles(topic) {
+      const status = articleStatuses[topic];
+      try {
+        const response = await fetch(`/api/articles?topic=${topic}`, {
+          cache: "no-cache",
+          signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) throw new Error("Articles unavailable");
+        const data = await response.json();
+        if (!Array.isArray(data.articles) || !data.articles.length) throw new Error("Empty feed");
+        const cards = data.articles.map((item) => {
+          if (new URL(item.url).protocol !== "https:") throw new Error("Invalid link");
+          const card = document.createElement("article");
+          card.className = "article";
+          const heading = document.createElement("h4");
+          const link = document.createElement("a");
+          link.href = item.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = item.title;
+          heading.appendChild(link);
+          card.appendChild(heading);
+          const meta = document.createElement("div");
+          meta.className = "article-meta";
+          meta.textContent = "Via Google News";
+          if (item.publishedAt) {
+            const date = document.createElement("time");
+            date.dateTime = item.publishedAt;
+            date.textContent = new Date(item.publishedAt).toLocaleDateString();
+            meta.appendChild(date);
+          }
+          card.appendChild(meta);
+          return card;
+        });
+        document.querySelector(`#${topic}-panel .article-list`).replaceChildren(...cards);
+        status.textContent = `Updated ${new Date(data.updatedAt).toLocaleString()}. Refreshes hourly.`;
+      } catch {
+        status.textContent = "Refresh unavailable. Showing previously loaded articles; retrying next hour.";
+      }
+    }
+
+    async function refreshPageData(recordVisit = false) {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        await Promise.allSettled([
+          refreshViews(recordVisit), refreshArticles("ev"), refreshArticles("moto")
+        ]);
+      } finally {
+        lastRefresh = Date.now();
+        refreshing = false;
+      }
+    }
+
+    refreshPageData(true);
+    setInterval(() => refreshPageData(), REFRESH_INTERVAL);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && Date.now() - lastRefresh >= REFRESH_INTERVAL) refreshPageData();
+    });
+
     const tabButtons = document.querySelectorAll("[role='tab']");
     const panels = document.querySelectorAll("[role='tabpanel']");
     const chatContext = {
